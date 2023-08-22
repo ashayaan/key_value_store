@@ -1,6 +1,11 @@
 # Data Store Server
 This project implements a Python based multi-client data storage server with transaction support. The server allows clients to interact with a data store that supports basic operations like PUT, GET, DELETE, and also transaction management operations like BEGIN, COMMIT, and ROLLBACK.
 
+#### Transaction methodology 
+I manage transaction records through a dictionary. For each user, an entry is created in this dictionary, utilizing the thread's unique ID as the key and maintaining a stack as the corresponding value. Within this stack, each element is a list that captures the executed commands during a transaction. When a user initiates a transaction using the "BEGIN" command, a new stack entry is created for that thread's ID. As each command is processed within the transaction, I update the data and add the command to the transaction stack. In case of a command failure, I revert all prior commands within the stack and terminate the ongoing transaction. This action effectively restores the data to the state at the start of the most recent user transaction. On successful execution of all commands, when the user issues a "COMMIT" command, I remove the current transaction from the stack. This guarantees that all modifications to the data become irreversible.
+
+An alternative strategy to implement rollback and commit functionality in transactions involves utilizing a local data store. With this approach, for each transaction, a separate local data store is maintained. During the transaction, any changes are applied to this local store. If any command within the transaction fails, the local data store is discarded. Conversely, upon hitting the "COMMIT" command, the global store is updated with the contents of the local data store. I opted against employing this method primarily to conserve memory usage.
+
 ### Assumptions
 <ul>
     <li> Syntactical errors within the command are not regarded as failures and will not trigger a check to determine if a transaction can be committed. </li>
