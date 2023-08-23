@@ -23,21 +23,21 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(result, "ERROR")
 
     def test_transaction_rollback(self):
-        self.data_store.begin("thread1")
+        self.data_store.start("thread1")
         self.data_store.put("X", "10", "thread1")
         self.data_store.rollback("thread1")
         self.assertIsNone(self.data_store.get("X", "thread1"))
 
     def test_rollback_child_trasactions(self):
-        self.data_store.begin("thread1")
+        self.data_store.start("thread1")
         self.data_store.put("X", "10", "thread1")
-        self.data_store.begin("thread2")
+        self.data_store.start("thread2")
         self.data_store.put("X", "20", "thread2")
         self.data_store.rollback("thread2")
         self.assertEqual(self.data_store.get("X", "thread1"), "10")
 
     def test_transaction_commit(self):
-        self.data_store.begin("thread1")
+        self.data_store.start("thread1")
         self.data_store.put("X", "10", "thread1")
         self.data_store.commit("thread1")
         self.assertEqual(self.data_store.get("X","thread1"), "10")

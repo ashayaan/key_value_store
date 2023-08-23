@@ -1,8 +1,8 @@
 # Data Store Server
-This project implements a Python based multi-client data storage server with transaction support. The server allows clients to interact with a data store that supports basic operations like PUT, GET, DELETE, and also transaction management operations like BEGIN, COMMIT, and ROLLBACK.
+This project implements a Python based multi-client data storage server with transaction support. The server allows clients to interact with a data store that supports basic operations like PUT, GET, DELETE, and also transaction management operations like start, COMMIT, and ROLLBACK.
 
 #### Transaction methodology 
-I manage the tracking of transaction records using a dictionary structure. Within this design, a unique entry is generated in the dictionary for each user, leveraging the thread's exclusive ID as the key. This entry corresponds to a stack, which in turn holds the state of the data at the inception of the transaction. When a user triggers a transaction using the "BEGIN" command, a fresh stack entry is established specifically for the associated thread's ID. As the transaction progresses, I proceed to update the local data reflecting the ongoing transaction. In the event of a command's failure, I promptly revert the data's state to that at the outset of the transaction.
+I manage the tracking of transaction records using a dictionary structure. Within this design, a unique entry is generated in the dictionary for each user, leveraging the thread's exclusive ID as the key. This entry corresponds to a stack, which in turn holds the state of the data at the inception of the transaction. When a user triggers a transaction using the "START" command, a fresh stack entry is established specifically for the associated thread's ID. As the transaction progresses, I proceed to update the local data reflecting the ongoing transaction. In the event of a command's failure, I promptly revert the data's state to that at the outset of the transaction.
 
 Upon the successful completion of all commands, particularly when the user triggers the "COMMIT" command, I synchronize the global data with the local data store. This procedure ensures that all adjustments made to the data become irrevocable.
 
@@ -33,7 +33,7 @@ The DataStore class provides utility functions for interacting with the data sto
     <li>put(key, value, thread_id): Assigns the provided value to the corresponding key within the data store. If a transaction is active, the change is recorded for potential rollback.</li>
     <li>get(key): Retrieves the value associated with the provided key.</li>
     <li>delete(key, thread_id): Removes the entry associated with the provided key. If a transaction is active, the change is recorded for potential rollback.</li>
-    <li>begin(thread_id): Initiates a new transaction for a specific thread.</li>
+    <li>start(thread_id): Initiates a new transaction for a specific thread.</li>
     <li>commit(thread_id): Finalizes an ongoing transaction for a specified thread.</li>
     <li>rollback(thread_id): Reverts changes made during an ongoing transaction for a specific thread.</li>
     <li>check_if_transaction_exists(thread_id): Checks if transactions exist for a given thread.</li>
@@ -53,7 +53,7 @@ The Server class manages incoming client connections and processes their command
     <li>GET <key>: Retrieves the value associated with the given key.</li>
     <li>PUT <key> <value>: Assigns the provided value to the corresponding key.</li>
     <li>DELETE <key>: Removes the entry associated with the provided key.</li>
-    <li>BEGIN: Initiates a new transaction.</li>
+    <li>start: Initiates a new transaction.</li>
     <li>COMMIT: Finalizes an ongoing transaction.</li>
     <li>ROLLBACK: Reverts changes made during an ongoing transaction.</li>
 </ul>

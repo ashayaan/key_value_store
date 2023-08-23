@@ -2,7 +2,7 @@
  # @ Author: Ahmad Shayaan
  # @ Create Time: 2023-08-21 14:55:02
  # @ Modified by: Ahmad Shayaan
- # @ Modified time: 2023-08-22 17:48:26
+ # @ Modified time: 2023-08-22 20:44:05
  # @ Description:
  '''
 
@@ -11,7 +11,7 @@ import threading
 import json
 
 HOST = "127.0.0.1"
-PORT = 8892
+PORT = 8893
 
 class DataStore():
     '''
@@ -25,7 +25,7 @@ class DataStore():
             Retrieves the value associated with the provided key.
         delte(key, thread_id)
             Removes the entry associated with the provided key.
-        begin(thread_id)
+        start(thread_id)
             Initiates a new transaction for a specific thread
         commit(thread_id)
             Finalizes an ongoing transaction for a specified thread
@@ -91,7 +91,7 @@ class DataStore():
             else:
                 return"ERROR"
             
-    def begin(self, thread_id): 
+    def start(self, thread_id): 
         '''
         Initiates a new transaction associated with the provided thread_i
 
@@ -174,8 +174,8 @@ class Server():
             return {"status": "Error", "mesg": "Invalid command"}
 
         method = command[0].upper() if type(command[0]) == str else command[0]
-        if method == "BEGIN" and len(command) == 1:
-            return self.data_store.begin(thread_id)
+        if method == "START" and len(command) == 1:
+            return self.data_store.start(thread_id)
         
         if method == "COMMIT" and len(command) == 1:
             return self.data_store.commit(thread_id)
