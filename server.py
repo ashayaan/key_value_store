@@ -2,7 +2,7 @@
  # @ Author: Ahmad Shayaan
  # @ Create Time: 2023-08-21 14:55:02
  # @ Modified by: Ahmad Shayaan
- # @ Modified time: 2023-08-22 20:44:05
+ # @ Modified time: 2023-08-22 20:48:17
  # @ Description:
  '''
 
@@ -199,7 +199,7 @@ class Server():
             elif value == "SUCCESS":
                 return {"status": "Ok"}
         
-        if method == "DELETE" and len(command) == 2:
+        if method == "DEL" and len(command) == 2:
             value = self.data_store.delete(command[1], thread_id)
             if value == "ERROR":
                 # If the command execution encounters an error, 
