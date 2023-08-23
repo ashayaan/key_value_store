@@ -2,7 +2,7 @@
  # @ Author: Ahmad Shayaan
  # @ Create Time: 2023-08-21 14:55:07
  # @ Modified by: Ahmad Shayaan
- # @ Modified time: 2023-08-22 14:04:19
+ # @ Modified time: 2023-08-22 17:23:50
  # @ Description:
  '''
 
@@ -10,7 +10,7 @@ import socket
 import json
 
 HOST = "127.0.0.1"
-PORT = 8891
+PORT = 8892
 
 def send_command(command, socket):
     socket.send(command.encode('utf-8'))

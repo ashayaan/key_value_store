@@ -2,7 +2,7 @@
  # @ Author: Ahmad Shayaan
  # @ Create Time: 2023-08-21 14:55:02
  # @ Modified by: Ahmad Shayaan
- # @ Modified time: 2023-08-22 14:31:44
+ # @ Modified time: 2023-08-22 17:48:26
  # @ Description:
  '''
 
@@ -11,7 +11,7 @@ import threading
 import json
 
 HOST = "127.0.0.1"
-PORT = 8891
+PORT = 8892
 
 class DataStore():
     '''
@@ -31,8 +31,6 @@ class DataStore():
             Finalizes an ongoing transaction for a specified thread
         rollback(thread_id)
             Reverts changes made during an ongoing transaction for a specific thread.
-        check_if_transaction_exists(thread_id)
-            Checks if transactions exits for given thread_id
     '''
     def __init__(self):
         self.data = {}
@@ -51,16 +49,15 @@ class DataStore():
         '''
         with self.lock:
             try:
-                if thread_id in self.transactions.keys() and len(self.transactions[thread_id]) > 0:
-                    self.transactions[thread_id][-1].append(("PUT",key, self.data.get(key,None))) #adding the key to delete in case of rollback
-                    self.data[key] = value
+                if thread_id in self.transactions.keys():
+                    self.transactions[thread_id][-1][key] = value
                 else:
                     self.data[key] = value
                 return "SUCCESS"
             except Exception as e:
                 return "ERROR"
     
-    def get(self, key:str):
+    def get(self, key:str, thread_id):
         '''
         The get method retrieves the value associated with a given key from the data store within.
 
@@ -68,7 +65,10 @@ class DataStore():
             key: The identifier for the data entry in the store.
         '''
         with self.lock:
-            return self.data.get(key,None)
+            if thread_id in self.transactions.keys():
+                return self.transactions[thread_id][-1].get(key, None)
+            else:
+                return self.data.get(key,None)
     
     def delete(self, key:str, thread_id):
         '''
@@ -79,16 +79,18 @@ class DataStore():
             thread_id: The unique identifier for the current thread accessing the data store.
         '''
         with self.lock:
-            if key in self.data.keys():
-                if thread_id in self.transactions.keys() and len(self.transactions[thread_id]) > 0:
-                    self.transactions[thread_id][-1].append(("DELETE",key,self.data[key])) #adding the key value pair in case of rollback
-                    del self.data[key]
+            if thread_id in self.transactions.keys():
+                if key in self.transactions[thread_id][-1].keys():
+                    del self.transactions[thread_id][-1][key]
+                    return "SUCCESS"
                 else:
-                    del self.data[key]
+                    return "ERROR"
+            elif key in self.data.keys():
+                del self.data[key]
                 return "SUCCESS"
             else:
-                return "ERROR"
-    
+                return"ERROR"
+            
     def begin(self, thread_id): 
         '''
         Initiates a new transaction associated with the provided thread_i
@@ -98,9 +100,9 @@ class DataStore():
         '''
         with self.lock:
             if thread_id not in self.transactions.keys():
-                self.transactions[thread_id] = [[]]
+                self.transactions[thread_id] = [self.data.copy()]
             else:
-                self.transactions[thread_id].append([])
+                self.transactions[thread_id].append(self.transactions[thread_id][-1].copy())
             return {"status":"Ok", "mesg":"Began new transactions"}
     
     def commit(self, thread_id):
@@ -111,8 +113,13 @@ class DataStore():
             thread_id: The unique identifier for the current thread accessing the data store.
         '''
         with self.lock:
-            if thread_id in self.transactions.keys() and len(self.transactions[thread_id]) > 0:
-                self.transactions[thread_id].pop()
+            if thread_id in self.transactions.keys():
+                new_data = self.transactions[thread_id].pop()
+                if len(self.transactions[thread_id]) > 0:
+                    self.transactions[thread_id][-1] = new_data.copy() #assigning changes to parent transaction
+                else:
+                    self.data = new_data.copy() #If parent transaction assigning it to global store
+                    del self.transactions[thread_id]
                 return {"status":"Ok", "mesg":"Transaction committed"}
             else:
                 return {"status":"Error", "mesg":"No transactions to commit"}
@@ -125,31 +132,14 @@ class DataStore():
             thread_id: The unique identifier for the current thread accessing the data store.
         '''
         with self.lock:
-            if thread_id in self.transactions.keys() and len(self.transactions[thread_id]) > 0:
-                rollback_transactions = self.transactions[thread_id].pop()
+            if thread_id in self.transactions.keys():
+                self.transactions[thread_id].pop()
+                if len(self.transactions[thread_id]) == 0:
+                    del self.transactions[thread_id]
             else:
                 return {"status":"Error", "mesg":"No transactions to rollback"}
-            
-            for transaction in reversed(rollback_transactions):
-                if transaction[0].upper() == "PUT":
-                    if transaction[2] is None:
-                        del self.data[transaction[1]]
-                    else:
-                        self.data[transaction[1]] = transaction[2]
-                
-                if transaction[0].upper() == "DELETE":
-                    self.data[transaction[1]] = transaction[2]
-                
         return {"status":"Ok", "mesg":"Transaction roll backed"}
     
-    def check_if_transaction_exists(self, thread_id):
-        ''''
-        This function check if trasactions exists for a given thread_id
-
-        Parameter:
-            thread_id: The unique identifier for the current thread accessing the data store.
-        '''
-        return True if thread_id in self.transactions.keys() else False
 
 class Server():
     '''
@@ -194,7 +184,7 @@ class Server():
             return self.data_store.rollback(thread_id)
         
         if method == "GET" and len(command) == 2:
-            value = self.data_store.get(command[1])
+            value = self.data_store.get(command[1], thread_id)
             if value is None:
                 return {"status": "Error", "mesg": "Key not found"}
             return {"status": "Ok", "result": value}
@@ -205,8 +195,6 @@ class Server():
                 # If the command execution encounters an error, 
                 # we perform a rollback of all entries within the current transaction.
                 _ = self.data_store.rollback(thread_id)
-                if self.data_store.check_if_transaction_exists(thread_id):
-                    return {"status": "Error", "mesg": "Failed to set value, ending current transaction"}    
                 return {"status": "Error", "mesg": "Failed to set value"}
             elif value == "SUCCESS":
                 return {"status": "Ok"}
@@ -217,8 +205,6 @@ class Server():
                 # If the command execution encounters an error, 
                 # we perform a rollback of all entries within the current transaction.
                 _ = self.data_store.rollback(thread_id)
-                if self.data_store.check_if_transaction_exists(thread_id):
-                   return {"status": "Error", "mesg": "Failed to set value, ending current transaction"}    
                 return {"status": "Error", "mesg": "Key not found"}
             elif value == "SUCCESS":
                 return {"status": "Ok"}
