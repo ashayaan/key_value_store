@@ -1,5 +1,5 @@
 # Data Store Server
-This project implements a Python based multi-client data storage server with transaction support. The server allows clients to interact with a data store that supports basic operations like PUT, GET, DELETE, and also transaction management operations like start, COMMIT, and ROLLBACK.
+This project implements a Python based multi-client data storage server with transaction support. The server allows clients to interact with a data store that supports basic operations like PUT, GET, DELETE, and also transaction management operations like START, COMMIT, and ROLLBACK.
 
 #### Transaction methodology 
 I manage the tracking of transaction records using a dictionary structure. Within this design, a unique entry is generated in the dictionary for each user, leveraging the thread's exclusive ID as the key. This entry corresponds to a stack, which in turn holds the state of the data at the inception of the transaction. When a user triggers a transaction using the "START" command, a fresh stack entry is established specifically for the associated thread's ID. As the transaction progresses, I proceed to update the local data reflecting the ongoing transaction. In the event of a command's failure, I promptly revert the data's state to that at the outset of the transaction.
