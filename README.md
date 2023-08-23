@@ -53,7 +53,7 @@ The Server class manages incoming client connections and processes their command
     <li>GET <key>: Retrieves the value associated with the given key.</li>
     <li>PUT <key> <value>: Assigns the provided value to the corresponding key.</li>
     <li>DELETE <key>: Removes the entry associated with the provided key.</li>
-    <li>start: Initiates a new transaction.</li>
+    <li>START: Initiates a new transaction.</li>
     <li>COMMIT: Finalizes an ongoing transaction.</li>
     <li>ROLLBACK: Reverts changes made during an ongoing transaction.</li>
 </ul>
