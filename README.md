@@ -20,7 +20,7 @@ Notably, I've accounted for scenarios where a transaction can give rise to a chi
 Python 3.x, the project uses packages from the python standard library
 
 ### How to Use
-Modify the HOST and PORT constants in the server.py script to set the server's listening address and port. By default the server runs on localhost port 8891.
+Modify the HOST and PORT constants in the server.py script to set the server's listening address and port. By default the server runs on localhost port 8893.
 Run the script in your terminal: ``` python script_name.py```.
 
 Clients can interact with the server either using the client.py or using any TCP client, such as telnet.
@@ -63,6 +63,6 @@ The Server class manages incoming client connections and processes their command
 To interact with the server using telnet:
 <ul>
 <li>Open a terminal.</li>
-<li>Connect to the server: telnet 127.0.0.1 8891</li>
+<li>Connect to the server: telnet 127.0.0.1 8893</li>
 <li>Send commands and observe server responses.</li>
 </ul>
